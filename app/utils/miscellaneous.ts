@@ -59,23 +59,6 @@ export const removeEmojis = (text: string): string => {
   )
 }
 
-export const alertRequiredFields = async (fieldsObject: Object): Promise<string> => {
-  let keys = Object.keys(fieldsObject),
-    msg = ""
-
-  for (let key of keys) {
-    if (fieldsObject[key] !== null && fieldsObject[key] !== undefined && fieldsObject[key] !== "")
-      continue
-
-    const translatedKey = i18n.translate(`COMMONS.LABELS.${key.toUpperCase()}`)
-    msg += `${i18n.translate("ALERTS.COMMONS.FIELD_REQUIRED_TITLE", {
-      field: translatedKey,
-    })}\n`
-  }
-
-  return msg
-}
-
 export const alertRequiredFieldsNoTranslate = async (fieldsObject: Object): Promise<string> => {
   let keys = Object.keys(fieldsObject),
     msg = ""
@@ -84,7 +67,7 @@ export const alertRequiredFieldsNoTranslate = async (fieldsObject: Object): Prom
     if (fieldsObject[key] !== null && fieldsObject[key] !== undefined && fieldsObject[key] !== "")
       continue
 
-    const keyName = key.toUpperCase()
+    const keyName = key
     msg += `El campo "${keyName}" es obligatorio\n`
   }
 

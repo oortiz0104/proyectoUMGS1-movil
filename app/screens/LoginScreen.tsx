@@ -12,58 +12,32 @@ import {
   ViewStyle,
 } from "react-native"
 import { Text } from "../components"
-import { AppStackParamList, AppStackScreenProps } from "../navigators"
-import { colors, spacing } from "../theme"
+import { AppStackParamList } from "../navigators"
+import { colors, spacing, typography } from "../theme"
 import { Button, Icon, Input } from "@rneui/base"
-import i18n from "i18n-js"
-import { DEFAULT_API_CONFIG, api } from "../services/api"
-import { load, remove, save } from "../utils/storage"
+import { StackScreenProps } from "@react-navigation/stack"
+import { api } from "../services/api"
+import apiRoutes from "../services/api/apiRoutes"
 import { patterns } from "../utils/regexPatterns"
 import { Notifier, NotifierComponents } from "react-native-notifier"
 import NetInfo from "@react-native-community/netinfo"
-import moment from "moment"
 import { ScrollView } from "react-native-gesture-handler"
 import { delay } from "../utils/delay"
-import { alertRequiredFields, removeEmojis } from "../utils/miscellaneous"
+import { alertRequiredFieldsNoTranslate, removeEmojis } from "../utils/miscellaneous"
+import { isSignedIn } from "app/utils/session"
+import { Reactotron } from "app/services/reactotron/reactotronClient"
+import { save } from "app/utils/storage"
 
-export const LoginScreen: FC<AppStackScreenProps<AppStackParamList, "Login">> = observer(
+export const LoginScreen: FC<StackScreenProps<AppStackParamList, "Login">> = observer(
   ({ navigation }) => {
-    const [pin, setPin] = useState("")
-    const [email, setEmail] = useState("")
+    const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
     const [allValid, setAllValid] = useState(false)
 
     const [loading, setLoading] = useState(false)
-    const [expresiones, setExpresiones] = useState({})
 
-    const isTenantConfigured = async () => {
-      try {
-        const tenantCode = await load("tenantCode")
-        const tenantURL = await load("tenantURL")
-
-        if (tenantCode && tenantURL) {
-          DEFAULT_API_CONFIG.url = tenantURL
-
-          return isLogin()
-        }
-
-        setLoading(false)
-        navigation.navigate("Tenant")
-      } catch (err) {
-        Notifier.showNotification({
-          title: i18n.translate("ALERTS.LOG_IN.PROBLEM"),
-          duration: 5000,
-          showAnimationDuration: 800,
-          Component: NotifierComponents.Alert,
-          componentProps: {
-            alertType: "error",
-          },
-        })
-      }
-    }
-
-    const isLogin = async () => {
+    const isLoggedIn = async () => {
       try {
         const res = await isSignedIn()
         if (res) {
@@ -73,7 +47,7 @@ export const LoginScreen: FC<AppStackScreenProps<AppStackParamList, "Login">> = 
         setLoading(false)
       } catch (err) {
         Notifier.showNotification({
-          title: i18n.translate("ALERTS.LOG_IN.PROBLEM"),
+          title: "Hubo un error al intentar iniciar sesión",
           duration: 5000,
           showAnimationDuration: 800,
           Component: NotifierComponents.Alert,
@@ -89,15 +63,14 @@ export const LoginScreen: FC<AppStackScreenProps<AppStackParamList, "Login">> = 
       let connection = await NetInfo.fetch()
 
       // Validar que los campos no estén vacíos no estén vacíos.
-      if (email.trim() === "" || password.trim() === "" || pin.trim() === "") {
-        alertRequiredFields({
-          PIN: pin,
-          EMAIL: email,
-          PASSWORD: password,
+      if (username.trim() === "" || password.trim() === "") {
+        alertRequiredFieldsNoTranslate({
+          "Nombre de usuario": username,
+          Contraseña: password,
         }).then((message) => {
           Notifier.showNotification({
             title: message,
-            description: i18n.translate("ALERTS.COMMONS.ALL_FIELDS_REQUIRED_DESCRIPTION"),
+            description: "Por favor, complete todos los campos",
             duration: 5000,
             showAnimationDuration: 800,
             Component: NotifierComponents.Alert,
@@ -113,25 +86,9 @@ export const LoginScreen: FC<AppStackScreenProps<AppStackParamList, "Login">> = 
         return
       }
 
-      if (pin.search(patterns.pin)) {
+      if (username.search(patterns.username)) {
         Notifier.showNotification({
-          title: i18n.translate("ALERTS.LOG_IN.NOT_VALID_PIN"),
-          duration: 5000,
-          showAnimationDuration: 800,
-          Component: NotifierComponents.Alert,
-          componentProps: {
-            alertType: "error",
-          },
-        })
-        setLoading(false)
-        setAllValid(false)
-
-        return
-      }
-
-      if (email.search(patterns.email)) {
-        Notifier.showNotification({
-          title: i18n.translate("ALERTS.LOG_IN.NOT_VALID_EMAIL"),
+          title: "Usuario inválido",
           duration: 5000,
           showAnimationDuration: 800,
           Component: NotifierComponents.Alert,
@@ -147,8 +104,8 @@ export const LoginScreen: FC<AppStackScreenProps<AppStackParamList, "Login">> = 
 
       if (!connection.isConnected) {
         Notifier.showNotification({
-          title: i18n.translate("ALERTS.COMMONS.NO_INTERNET_TITLE"),
-          description: i18n.translate("ALERTS.COMMONS.NO_INTERNET_DESCRIPTION"),
+          title: "No hay conexión a internet",
+          description: "Por favor, conéctese a internet y vuelva a intentarlo",
           duration: 5000,
           showAnimationDuration: 800,
           Component: NotifierComponents.Alert,
@@ -168,114 +125,51 @@ export const LoginScreen: FC<AppStackScreenProps<AppStackParamList, "Login">> = 
 
     const submit = async () => {
       try {
-        let fcmT = await messaging().getToken()
-
-        let response = await api.postLogin(apiRoutes.apiSrvAuth, {
-          username: email,
+        let response = await api.post(apiRoutes.user.login, {
+          username: username,
           password: password,
-          grant_type: "password",
-          scope: `${pin.toUpperCase()} APP ${fcmT}`,
         })
 
-        if (response.error) {
-          if (response.error.includes("bloqueado")) {
-            Notifier.showNotification({
-              title: i18n.translate("ALERTS.LOG_IN.INVALID_AUTHORIZATION_TITLE"),
-              description: i18n.translate("ALERTS.LOG_IN.INVALID_AUTHORIZATION_DESCRIPTION"),
-              duration: 5000,
-              showAnimationDuration: 800,
-              Component: NotifierComponents.Alert,
-              componentProps: {
-                alertType: "error",
-              },
-            })
-            setLoading(false)
-            return
-          }
+        Reactotron.display({
+          name: "API Response",
+          preview: "API Response",
+          value: response,
+        })
 
-          if (response.error === "") {
-            Notifier.showNotification({
-              title: i18n.translate("ALERTS.COMMONS.UNEXPECTED_ERROR_TITLE"),
-              description: i18n.translate("ALERTS.COMMONS.UNEXPECTED_ERROR_DESCRIPTION"),
-              duration: 5000,
-              showAnimationDuration: 800,
-              Component: NotifierComponents.Alert,
-              componentProps: {
-                alertType: "error",
-              },
-            })
-            setLoading(false)
-            return
-          }
+        if (response.status === 200) {
+          await save("identity", response.data.checkUser)
+          await save("token", response.data.token)
 
-          if (response.error) {
-            Notifier.showNotification({
-              title: response.error,
-              duration: 5000,
-              showAnimationDuration: 800,
-              Component: NotifierComponents.Alert,
-              componentProps: {
-                alertType: "error",
-              },
-            })
-            setLoading(false)
-            return
-          }
-        }
-
-        let timeToken = moment().add(response.expires_in - 10, "s")
-
-        await save("access_token", response.access_token)
-        await save("expires_in", response.expires_in)
-        await save("token_type", response.token_type)
-        await save("refresh_token", response.refresh_token)
-        await save("user", email)
-        await save("password", password)
-        await save("pinUser", pin)
-        await save("time_exp", timeToken)
-
-        let info = await api.get(apiRoutes.apiSrvUserAuthenticated)
-
-        await save("info_user", info.data)
-
-        if (info?.data?.Caduco_contrasenia) {
-          Notifier.showNotification({
-            title: i18n.translate("ALERTS.LOG_IN.PASSWORD_EXPIRED_TITLE"),
-            description: i18n.translate("ALERTS.LOG_IN.PASSWORD_EXPIRED_DESCRIPTION"),
-            duration: 5000,
-            showAnimationDuration: 800,
-            Component: NotifierComponents.Alert,
-            componentProps: {
-              alertType: "error",
-            },
-          })
-
-          await remove("access_token")
-          await remove("refresh_token")
-          await remove("time_exp")
-
+          setAllValid(true)
           setLoading(false)
 
+          delay(1000).then(() => {
+            navigation.navigate("Home")
+
+            setUsername("")
+            setPassword("")
+            setShowPassword(false)
+            setAllValid(false)
+          })
           return
         }
 
-        setAllValid(true)
-        setLoading(false)
-
-        delay(1000).then(() => {
-          navigation.navigate("Home")
-
-          setPin("")
-          setEmail("")
-          setPassword("")
-          setShowPassword(false)
-          setAllValid(false)
+        Notifier.showNotification({
+          title: response.data.message,
+          duration: 2000,
+          showAnimationDuration: 800,
+          Component: NotifierComponents.Alert,
+          componentProps: {
+            alertType: "error",
+          },
         })
+
+        setLoading(false)
+        setAllValid(false)
       } catch (error) {
-        console.log("🚀 ~ file: LoginScreen.tsx:280 ~ submit ~ error:", error)
         Notifier.showNotification({
           title: error,
-          duration: 0,
+          duration: 2000,
           showAnimationDuration: 800,
           Component: NotifierComponents.Alert,
           componentProps: {
@@ -286,21 +180,7 @@ export const LoginScreen: FC<AppStackScreenProps<AppStackParamList, "Login">> = 
     }
 
     useEffect(() => {
-      ;(async () => {
-        let response = await api.get(apiRoutes.apiSrvGetInicioSesionER)
-        setExpresiones(response)
-
-        const authStatus = await messaging().requestPermission()
-        const enabled =
-          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-          authStatus === messaging.AuthorizationStatus.PROVISIONAL
-
-        if (enabled) {
-          console.log("Authorization status:", authStatus)
-        }
-
-        return isTenantConfigured()
-      })()
+      isLoggedIn()
     }, [])
 
     return (
@@ -317,86 +197,36 @@ export const LoginScreen: FC<AppStackScreenProps<AppStackParamList, "Login">> = 
           <ScrollView
             style={{
               backgroundColor: "#fff",
-              paddingHorizontal: spacing.extraLarge,
+              paddingHorizontal: 32,
               flex: 1,
             }}
             contentContainerStyle={{
               justifyContent: "center",
-              minHeight: Dimensions.get("window").height,
+              paddingTop: 250,
+              paddingBottom: 20,
             }}
           >
-            <View style={$logo}>
-              <CoveloHorizontal />
-            </View>
-            <Text testID="login-heading" tx="COMMONS.LABELS.LOG_IN" style={$header} />
+            <Text text="Iniciar sesión" style={$header} />
 
             <View>
-              <Text testID="login-pin-label" tx="COMMONS.LABELS.PIN" style={$label} />
+              <Text text="Nombre de usuario" style={$label} />
               <Input
                 autoComplete="off"
-                containerStyle={{
-                  borderRadius: 10,
-                  paddingHorizontal: 0,
-                  height: 50,
-                  marginBottom: spacing.medium,
-                  borderColor: allValid ? "transparent" : colors.paletteCovelo.primary,
-                  backgroundColor: allValid && "#F1F3FF",
-                  borderWidth: 2,
-                }}
-                inputContainerStyle={{
-                  borderRadius: 10,
-                  borderBottomColor: "transparent",
-                  paddingHorizontal: spacing.small,
-                  display: "flex",
-                }}
-                inputStyle={{
-                  ...$text,
-                  color: "#000",
-                  fontSize: 14,
-                  textTransform: "uppercase",
-                }}
-                leftIcon={
-                  <Icon name="hash" type="octicon" color={paletteCovelo.primary} size={18} />
-                }
-                rightIcon={
-                  allValid && (
-                    <Icon
-                      name="check-circle-fill"
-                      type="octicon"
-                      color={paletteCovelo.primary}
-                      size={18}
-                    />
-                  )
-                }
-                maxLength={6}
-                autoCapitalize="characters"
-                value={pin}
-                onChangeText={(value) => {
-                  setPin(removeEmojis(value).replace(/\s/g, ""))
-                }}
-              />
-            </View>
-
-            <View>
-              <Text testID="login-email-label" tx="COMMONS.LABELS.EMAIL" style={$label} />
-              <Input
-                autoComplete="off"
-                keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
                 containerStyle={{
                   borderRadius: 10,
                   paddingHorizontal: 0,
                   height: 50,
-                  marginBottom: spacing.medium,
-                  borderColor: allValid ? "transparent" : colors.paletteCovelo.primary,
-                  backgroundColor: allValid && "#F1F3FF",
+                  marginBottom: 20,
+                  borderColor: allValid ? "transparent" : colors.palette.primary400,
+                  backgroundColor: allValid ? colors.palette.primary100 : "transparent",
                   borderWidth: 2,
                 }}
                 inputContainerStyle={{
                   borderRadius: 10,
                   borderBottomColor: "transparent",
-                  paddingHorizontal: spacing.small,
+                  paddingHorizontal: 8,
                 }}
                 inputStyle={{
                   ...$text,
@@ -404,25 +234,25 @@ export const LoginScreen: FC<AppStackScreenProps<AppStackParamList, "Login">> = 
                   fontSize: 14,
                 }}
                 leftIcon={
-                  <Icon name="mail" type="octicon" color={paletteCovelo.primary} size={18} />
+                  <Icon name="person" type="octicon" color={colors.palette.primary400} size={18} />
                 }
                 rightIcon={
                   allValid && (
                     <Icon
                       name="check-circle-fill"
                       type="octicon"
-                      color={paletteCovelo.primary}
+                      color={colors.palette.primary400}
                       size={18}
                     />
                   )
                 }
-                value={email}
-                onChangeText={(value) => setEmail(removeEmojis(value))}
+                value={username}
+                onChangeText={(value) => setUsername(removeEmojis(value))}
               />
             </View>
 
             <View>
-              <Text testID="login-password-label" tx="COMMONS.LABELS.PASSWORD" style={$label} />
+              <Text text="Contraseña" style={$label} />
               <Input
                 autoComplete="off"
                 secureTextEntry={!showPassword}
@@ -430,14 +260,15 @@ export const LoginScreen: FC<AppStackScreenProps<AppStackParamList, "Login">> = 
                   borderRadius: 10,
                   paddingHorizontal: 0,
                   height: 50,
-                  borderColor: allValid ? "transparent" : colors.paletteCovelo.primary,
-                  backgroundColor: allValid && "#F1F3FF",
+                  marginBottom: 20,
+                  borderColor: allValid ? "transparent" : colors.palette.primary400,
+                  backgroundColor: allValid ? colors.palette.primary100 : "transparent",
                   borderWidth: 2,
                 }}
                 inputContainerStyle={{
                   borderRadius: 10,
                   borderBottomColor: "transparent",
-                  paddingHorizontal: spacing.small,
+                  paddingHorizontal: 8,
                 }}
                 inputStyle={{
                   ...$text,
@@ -445,17 +276,17 @@ export const LoginScreen: FC<AppStackScreenProps<AppStackParamList, "Login">> = 
                   fontSize: 14,
                 }}
                 leftIcon={
-                  <Icon name="lock" type="octicon" color={paletteCovelo.primary} size={18} />
+                  <Icon name="lock" type="octicon" color={colors.palette.primary400} size={18} />
                 }
                 rightIcon={
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                     {showPassword ? (
-                      <Icon name="eye" type="octicon" color={paletteCovelo.primary} size={18} />
+                      <Icon name="eye" type="octicon" color={colors.palette.primary400} size={18} />
                     ) : (
                       <Icon
                         name="eye-closed"
                         type="octicon"
-                        color={paletteCovelo.primary}
+                        color={colors.palette.primary400}
                         size={18}
                       />
                     )}
@@ -467,40 +298,16 @@ export const LoginScreen: FC<AppStackScreenProps<AppStackParamList, "Login">> = 
             </View>
 
             <Button
-              title={i18n.translate("COMMONS.LABELS.FORGOT_PASSWORD")}
-              titleStyle={{ ...$text, color: "#000", opacity: 0.5 }}
-              size="sm"
-              type="clear"
-              // onPress={changePassword}
-              buttonStyle={{
-                borderRadius: 10,
-              }}
-              containerStyle={{
-                borderRadius: 10,
-                marginVertical: spacing.medium,
-              }}
-              disabled={loading}
-              disabledStyle={{ backgroundColor: paletteCovelo.secondary, opacity: 0.2 }}
-              disabledTitleStyle={{ ...$text, color: "#000", opacity: 1 }}
-            />
-
-            <Button
-              title={
-                loading ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  i18n.translate("COMMONS.ACTIONS.LOG_IN")
-                )
-              }
+              title={loading ? <ActivityIndicator size="small" color="#fff" /> : "Iniciar sesión"}
               titleStyle={{ ...$text, color: "#fff" }}
               buttonStyle={{
                 borderRadius: 10,
-                backgroundColor: paletteCovelo.primary,
-                paddingVertical: spacing.medium,
+                backgroundColor: colors.palette.primary400,
+                paddingVertical: 16,
               }}
               containerStyle={{ borderRadius: 10 }}
               disabled={loading}
-              disabledStyle={{ backgroundColor: paletteCovelo.primary }}
+              disabledStyle={{ backgroundColor: colors.palette.primary400 }}
               onPress={validateLogin}
             />
           </ScrollView>
@@ -512,28 +319,22 @@ export const LoginScreen: FC<AppStackScreenProps<AppStackParamList, "Login">> = 
 
 const $text: TextStyle = {
   color: "#000",
-  fontFamily: "notoSansRegular",
+  fontFamily: typography.primary.normal,
 }
 
 const $bold: TextStyle = {
-  fontFamily: notoSans.semiBold,
-}
-
-const $logo: ViewStyle = {
-  display: "flex",
-  alignItems: "center",
-  marginBottom: spacing.massive,
+  fontFamily: typography.fonts.spaceGrotesk.semiBold,
 }
 
 const $label: TextStyle = {
   ...$text,
   fontSize: 14,
-  marginBottom: spacing.extraSmall,
+  marginBottom: 8,
 }
 
 const $header: TextStyle = {
+  ...$bold,
   fontSize: 24,
-  fontFamily: "notoSansBold",
-  color: colors.paletteCovelo.primary,
-  marginBottom: spacing.medium,
+  color: colors.palette.primary400,
+  marginBottom: 20,
 }

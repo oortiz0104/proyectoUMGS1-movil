@@ -5,14 +5,10 @@
  * See the [Backend API Integration](https://github.com/infinitered/ignite/blob/master/docs/Backend-API-Integration.md)
  * documentation for more details.
  */
-import {
-  ApisauceInstance,
-  create,
-} from "apisauce"
+import { ApiResponse, ApisauceInstance, create } from "apisauce"
 import Config from "../../config"
-import type {
-  ApiConfig,
-} from "./api.types"
+import type { ApiConfig } from "./api.types"
+import { GeneralApiProblem, getGeneralApiProblem } from "./apiProblem"
 
 /**
  * Configuring the apisauce instance.
@@ -44,6 +40,53 @@ export class Api {
     })
   }
 
+  async get(apiSrv: string, params?: any): Promise<any | GeneralApiProblem> {
+    const response: ApiResponse<any> = await this.apisauce.get(apiSrv, params, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "",
+      },
+    })
+
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+
+    try {
+      const data = response.data
+      const status = response.status
+
+      return { kind: "ok", data, status }
+    } catch (e) {
+      if (__DEV__) {
+        console.log(`Bad data: ${e.message}\n${response.data}`, e.stack)
+      }
+      return { kind: "bad-data" }
+    }
+  }
+
+  async post(apiSrv: string, params?: any): Promise<any | GeneralApiProblem> {
+    const response: ApiResponse<any> = await this.apisauce.post(apiSrv, params, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+
+    try {
+      const data = response.data
+      const status = response.status
+
+      return { kind: "ok", data, status }
+    } catch (e) {
+      if (__DEV__) {
+        console.log(`Bad data: ${e.message}\n${response.data}`, e.stack)
+      }
+      return { kind: "bad-data" }
+    }
+  }
 }
 
 // Singleton instance of the API for convenience
