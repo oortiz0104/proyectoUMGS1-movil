@@ -11,7 +11,7 @@ export interface PC {
 
 export interface ubication {
   _id: string
-  cellarNumber: Number
+  cellarNumber: number
   shelve: string
   occupied: boolean
   deleted: boolean

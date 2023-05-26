@@ -50,17 +50,6 @@ export const MenuCard = (props: CardProps) => {
           )}
         </View>
       </View>
-
-      {card.type === "profile" && (
-        <View
-          style={{
-            ...$iconCard,
-            justifyContent: "flex-end",
-          }}
-        >
-          <Icon name="chevron-right" type="octicon" color={"#FFF"} size={30} />
-        </View>
-      )}
     </TouchableOpacity>
   )
 }

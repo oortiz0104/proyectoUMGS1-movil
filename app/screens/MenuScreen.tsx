@@ -95,7 +95,10 @@ export const MenuScreen: FC<StackScreenProps<AppStackParamList, "Menu">> = obser
         icon: "archive",
         title: "Ubicaciones en bodega",
         text: "Ingresa, modifica o elimina ubicaciones en bodega",
-        onPress: () => Reactotron.log("Ubicaciones en bodega"),
+        onPress: () =>
+          navigation.navigate("CellarUbicationsInquiry", {
+            willRefresh: true,
+          }),
         type: "shortcut" as "shortcut",
         accessRoll: "ADMIN",
         navigation,

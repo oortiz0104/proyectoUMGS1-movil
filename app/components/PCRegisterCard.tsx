@@ -35,21 +35,25 @@ export const PCRegisterCard = (props: CardProps) => {
     <>
       <View style={$card}>
         <Text
-          text={`Hora de entrada: ${moment(card.check_in).format("HH:mm")}`}
+          text={`Hora de entrada: ${moment(card.check_in).format(
+            "D [de] MMMM [de] YYYY, hh:mm:ss A",
+          )}`}
           style={{ ...$text, fontSize: 14, lineHeight: 16, opacity: 0.5, marginBottom: 10 }}
         />
 
-        <Text
-          text={`Hora de salida: ${moment(card.check_in)
-            .utcOffset(-6)
-            .format("D [de] MMMM [de] YYYY, hh:mm:ss A")}`}
-          style={{ ...$text, fontSize: 14, lineHeight: 16, opacity: 0.5, marginBottom: 16 }}
-        />
+        {card.check_out && (
+          <Text
+            text={`Hora de salida: ${moment(card.check_out)
+              .utcOffset(-6)
+              .format("D [de] MMMM [de] YYYY, hh:mm:ss A")}`}
+            style={{ ...$text, fontSize: 14, lineHeight: 16, opacity: 0.5, marginBottom: 16 }}
+          />
+        )}
 
         <View style={$divider} />
 
         <Text
-          text={`Ingresado por: ${card.user.name} ${card.user.surname}`}
+          text={`Ingresado por: ${card.user?.name} ${card.user?.surname}`}
           style={{ ...$text, fontSize: 14, lineHeight: 16, opacity: 0.5, marginBottom: 10 }}
         />
 

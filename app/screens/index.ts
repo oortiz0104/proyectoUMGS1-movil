@@ -16,3 +16,6 @@ export * from "./UsedPCRegisterInquiryScreen"
 export * from "./UsersModule/UserInquiryScreen"
 export * from "./UsersModule/AddUserScreen"
 export * from "./UsersModule/EditUserScreen"
+
+export * from "./CellarUbicationsModule/CellarUbicationsInquiryScreen"
+export * from "./CellarUbicationsModule/AddCellarUbicationScreen"

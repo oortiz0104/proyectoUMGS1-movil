@@ -29,7 +29,11 @@ const apiRoutes = {
     getUsedPCsRegister: "usedPCRegister/getUsedPCsRegister",
   },
   cellar: {
+    add: "cellar/add",
     getNotOccupiedCellarUbications: "cellar/getNotOccupiedCellarUbications",
+    getCellarUbications: "cellar/getCellarUbications",
+    updateCellarUbication: "cellar/updateCellarUbication",
+    deleteCellarUbication: "cellar/deleteCellarUbication",
   },
 }
 

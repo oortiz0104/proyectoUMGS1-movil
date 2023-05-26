@@ -6,6 +6,8 @@ export const patterns = {
   noSpeialCharactersWithNumbers: /^$|^[a-zA-Z0-9\u00C0-\u017F| \ \.\'\`\´\¨]+$/,
   genericField: /^$|^[a-zA-Z0-9\u00C0-\u017F|  \r \n \.\-\_\#\&\/\'\"]+$/,
   onlyLetters: /^[a-zA-Z\d]+$/,
-  onlyLettersAndNumbers: /^[A-Z0-9]+$/,
-  password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[¡!¿?@#$%^&*=+/\\|()\-\_`´~<>,.:;'"\[\]\{\} ])[A-Za-z\d¡!¿?@#$%^&*=+/\\|()\-\_`´~<>,.:;'"\[\]\{\} ]{8,}$/g,
+  onlyLettersAndNumbers: /^[a-zA-Z0-9]+$/,
+  onlyNumbers: /^[0-9]+$/,
+  password:
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[¡!¿?@#$%^&*=+/\\|()\-\_`´~<>,.:;'"\[\]\{\} ])[A-Za-z\d¡!¿?@#$%^&*=+/\\|()\-\_`´~<>,.:;'"\[\]\{\} ]{8,}$/g,
 }

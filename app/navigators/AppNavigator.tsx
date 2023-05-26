@@ -12,7 +12,7 @@ import { useColorScheme } from "react-native"
 import * as Screens from "app/screens"
 import Config from "../config"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
-import { PC, User } from "app/utils/interfaces"
+import { PC, User, ubication } from "app/utils/interfaces"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -45,6 +45,9 @@ export type AppStackParamList = {
   UserInquiry: { willRefresh: boolean }
   AddUser: { willRefresh: boolean }
   EditUser: { willRefresh: boolean; userData: User }
+
+  CellarUbicationsInquiry: { willRefresh: boolean }
+  AddCellarUbication: { willRefresh: boolean; cellarUbicationData?: ubication }
   // IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
 }
 
@@ -120,6 +123,17 @@ const AppStack = observer(function AppStack() {
       <Stack.Screen
         name="EditUser"
         component={Screens.EditUserScreen}
+        options={{ animation: "slide_from_right" }}
+      />
+
+      <Stack.Screen
+        name="CellarUbicationsInquiry"
+        component={Screens.CellarUbicationsInquiryScreen}
+        options={{ animation: "slide_from_right" }}
+      />
+      <Stack.Screen
+        name="AddCellarUbication"
+        component={Screens.AddCellarUbicationScreen}
         options={{ animation: "slide_from_right" }}
       />
     </Stack.Navigator>

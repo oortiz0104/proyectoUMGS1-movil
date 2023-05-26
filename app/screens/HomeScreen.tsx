@@ -75,7 +75,10 @@ export const HomeScreen: FC<StackScreenProps<AppStackParamList, "Home">> = obser
         icon: "archive",
         title: "Ubicaciones en bodega",
         text: "Ingresa, modifica o elimina ubicaciones en bodega",
-        onPress: () => Reactotron.log("Ubicaciones en bodega"),
+        onPress: () =>
+          navigation.navigate("CellarUbicationsInquiry", {
+            willRefresh: true,
+          }),
         accessRoll: "ADMIN",
       },
     ]
