@@ -1,4 +1,5 @@
-import { load } from "./storage"
+import { navigationRef } from "app/navigators"
+import { load, remove } from "./storage"
 
 const identity = "identity"
 const token = "token"
@@ -17,6 +18,13 @@ export const isSignedIn = () => {
         reject(err)
       })
   })
+}
+
+export const signOut = async () => {
+  await remove(identity)
+  await remove(token)
+
+  navigationRef.navigate("Login")
 }
 
 export const getToken = () => {

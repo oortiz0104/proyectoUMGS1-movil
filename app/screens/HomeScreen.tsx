@@ -15,10 +15,7 @@ import { StackScreenProps } from "@react-navigation/stack"
 import { LinearGradient } from "expo-linear-gradient"
 import { Icon } from "@rneui/base"
 import { Text, HomeCard } from "../components"
-import i18n from "i18n-js"
 import { ScrollView } from "react-native-gesture-handler"
-import { load } from "../utils/storage"
-import { normalizeString } from "../utils/miscellaneous"
 import { Reactotron } from "app/services/reactotron/reactotronClient"
 import { getIdentity } from "app/utils/session"
 
@@ -27,39 +24,69 @@ const { width, height } = Dimensions.get("window")
 export const HomeScreen: FC<StackScreenProps<AppStackParamList, "Home">> = observer(
   ({ navigation }) => {
     const [name, setName] = useState("")
+    const [role, setRole] = useState("")
 
     const cardInfo = [
       {
-        icon: "file",
+        icon: "device-desktop",
         title: "Equipos nuevos",
         text: "Ingresa, modifica o elimina equipos nuevos",
-        onPress: () => Reactotron.log("Nuevos equipos"),
+        onPress: () =>
+          navigation.navigate("NewPCInquiry", {
+            willRefresh: true,
+          }),
+        accessRoll: "any",
       },
       {
-        icon: "history",
+        icon: "log",
         title: "Registros de equipos nuevos",
         text: "Consulta los registros de los equipos nuevos",
-        onPress: () => Reactotron.log("Registros de nuevos equipos"),
+        onPress: () => navigation.navigate("NewPCRegisterInquiry"),
+        accessRoll: "any",
+      },
+      {
+        icon: "device-desktop",
+        title: "Equipos usados",
+        text: "Ingresa, modifica o elimina equipos usados",
+        onPress: () =>
+          navigation.navigate("UsedPCInquiry", {
+            willRefresh: true,
+          }),
+        accessRoll: "any",
+      },
+      {
+        icon: "log",
+        title: "Registros de equipos usados",
+        text: "Consulta los registros de los equipos usados",
+        onPress: () => navigation.navigate("UsedPCRegisterInquiry"),
+        accessRoll: "any",
       },
       {
         icon: "people",
-        title: "Equipos usados",
-        text: "Ingresa, modifica o elimina equipos usados",
-        onPress: () => Reactotron.log("Equipos usados"),
+        title: "Usuarios",
+        text: "Ingresa, modifica o elimina usuarios",
+        onPress: () =>
+          navigation.navigate("UserInquiry", {
+            willRefresh: true,
+          }),
+        accessRoll: "ADMIN",
       },
       {
-        icon: "location",
-        title: "Registros de equipos usados",
-        text: "Consulta los registros de los equipos usados",
-        onPress: () => Reactotron.log("Registros de equipos usados"),
+        icon: "archive",
+        title: "Ubicaciones en bodega",
+        text: "Ingresa, modifica o elimina ubicaciones en bodega",
+        onPress: () => Reactotron.log("Ubicaciones en bodega"),
+        accessRoll: "ADMIN",
       },
     ]
 
     useEffect(() => {
       ;(async () => {
         const infoUser = await getIdentity()
-        let names = infoUser.firstName
+
+        let names = infoUser.name
         setName(names)
+        setRole(infoUser.role)
       })()
     }, [])
 
@@ -83,7 +110,7 @@ export const HomeScreen: FC<StackScreenProps<AppStackParamList, "Home">> = obser
 
         <View style={$containerIconMenu}>
           <TouchableOpacity
-            // onPress={() => navigation.navigate("Menu")}
+            onPress={() => navigation.navigate("Menu")}
             activeOpacity={0.5}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
@@ -100,7 +127,7 @@ export const HomeScreen: FC<StackScreenProps<AppStackParamList, "Home">> = obser
           <View style={$welcomeContainer}>
             <Text
               testID="welcome"
-              text={`Hola ${name}`}
+              text={`Hola, ${name}`}
               style={[
                 $text,
                 $bold,
@@ -132,7 +159,13 @@ export const HomeScreen: FC<StackScreenProps<AppStackParamList, "Home">> = obser
 
             <View style={$cardsWrapper}>
               {cardInfo.map((card, index) => {
-                return <HomeCard key={index} index={index} card={card} />
+                if (card.accessRoll === role) {
+                  return <HomeCard key={index} index={index} card={card} />
+                }
+
+                if (card.accessRoll === "any") {
+                  return <HomeCard key={index} index={index} card={card} />
+                }
               })}
             </View>
           </View>

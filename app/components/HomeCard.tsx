@@ -25,7 +25,7 @@ export const HomeCard = (props: CardProps) => {
         style={{
           ...$iconCard,
           backgroundColor:
-            index === 0 || index === 3
+            index === 0 || index === 3 || index === 4
               ? `${colors.palette.primary400}26`
               : `${colors.palette.secondary400}26`,
         }}

@@ -12,6 +12,7 @@ import { useColorScheme } from "react-native"
 import * as Screens from "app/screens"
 import Config from "../config"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
+import { PC, User } from "app/utils/interfaces"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -28,9 +29,22 @@ import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
  */
 export type AppStackParamList = {
   Welcome: undefined
+  // 🔥 Your screens go here
   Login: undefined
   Home: undefined
-  // 🔥 Your screens go here
+  Menu: undefined
+
+  NewPCInquiry: { willRefresh: boolean }
+  AddNewPC: { willRefresh: boolean; pcData?: PC }
+  NewPCRegisterInquiry: undefined
+
+  UsedPCInquiry: { willRefresh: boolean }
+  AddUsedPC: { willRefresh: boolean; pcData?: PC }
+  UsedPCRegisterInquiry: undefined
+
+  UserInquiry: { willRefresh: boolean }
+  AddUser: { willRefresh: boolean }
+  EditUser: { willRefresh: boolean; userData: User }
   // IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
 }
 
@@ -53,8 +67,61 @@ const AppStack = observer(function AppStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Login">
       <Stack.Screen name="Welcome" component={Screens.WelcomeScreen} />
       {/** 🔥 Your screens go here */}
-      <Stack.Screen name="Login" component={Screens.LoginScreen} />
-      <Stack.Screen name="Home" component={Screens.HomeScreen} />
+      <Stack.Screen name="Login" component={Screens.LoginScreen} options={{ animation: "fade" }} />
+      <Stack.Screen
+        name="Home"
+        component={Screens.HomeScreen}
+        options={{ animation: "slide_from_right" }}
+      />
+      <Stack.Screen name="Menu" component={Screens.MenuScreen} options={{ animation: "fade" }} />
+
+      <Stack.Screen
+        name="NewPCInquiry"
+        component={Screens.NewPCInquiryScreen}
+        options={{ animation: "slide_from_right" }}
+      />
+      <Stack.Screen
+        name="AddNewPC"
+        component={Screens.AddNewPCScreen}
+        options={{ animation: "slide_from_right" }}
+      />
+      <Stack.Screen
+        name="NewPCRegisterInquiry"
+        component={Screens.NewPCRegisterInquiryScreen}
+        options={{ animation: "slide_from_right" }}
+      />
+
+      <Stack.Screen
+        name="UsedPCInquiry"
+        component={Screens.UsedPCInquiryScreen}
+        options={{ animation: "slide_from_right" }}
+      />
+      <Stack.Screen
+        name="AddUsedPC"
+        component={Screens.AddUsedPCScreen}
+        options={{ animation: "slide_from_right" }}
+      />
+      <Stack.Screen
+        name="UsedPCRegisterInquiry"
+        component={Screens.UsedPCRegisterInquiryScreen}
+        options={{ animation: "slide_from_right" }}
+      />
+
+      <Stack.Screen
+        name="UserInquiry"
+        component={Screens.UserInquiryScreen}
+        options={{ animation: "slide_from_right" }}
+      />
+      <Stack.Screen
+        name="AddUser"
+        component={Screens.AddUserScreen}
+        options={{ animation: "slide_from_right" }}
+      />
+      <Stack.Screen
+        name="EditUser"
+        component={Screens.EditUserScreen}
+        options={{ animation: "slide_from_right" }}
+      />
     </Stack.Navigator>
   )
 })

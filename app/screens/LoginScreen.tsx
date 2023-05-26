@@ -39,6 +39,25 @@ export const LoginScreen: FC<StackScreenProps<AppStackParamList, "Login">> = obs
 
     const isLoggedIn = async () => {
       try {
+        let connection = await NetInfo.fetch()
+
+        if (!connection.isConnected) {
+          Notifier.showNotification({
+            title: "No hay conexión a internet",
+            description: "Por favor, conéctese a internet y vuelva a intentarlo",
+            duration: 5000,
+            showAnimationDuration: 800,
+            Component: NotifierComponents.Alert,
+            componentProps: {
+              alertType: "error",
+            },
+          })
+          setLoading(false)
+          setAllValid(false)
+
+          return
+        }
+
         const res = await isSignedIn()
         if (res) {
           setLoading(true)
@@ -130,13 +149,17 @@ export const LoginScreen: FC<StackScreenProps<AppStackParamList, "Login">> = obs
           password: password,
         })
 
-        Reactotron.display({
-          name: "API Response",
-          preview: "API Response",
-          value: response,
-        })
-
         if (response.status === 200) {
+          Notifier.showNotification({
+            title: response.data.message,
+            duration: 2000,
+            showAnimationDuration: 800,
+            Component: NotifierComponents.Alert,
+            componentProps: {
+              alertType: "success",
+            },
+          })
+
           await save("identity", response.data.checkUser)
           await save("token", response.data.token)
 

@@ -51,6 +51,14 @@ const fonts = {
   },
 }
 
+export const spaceGrotesk = {
+  light: "spaceGroteskLight",
+  normal: "spaceGroteskRegular",
+  medium: "spaceGroteskMedium",
+  semiBold: "spaceGroteskSemiBold",
+  bold: "spaceGroteskBold",
+}
+
 export const typography = {
   /**
    * The fonts are available to use, but prefer using the semantic name.
